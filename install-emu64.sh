@@ -60,8 +60,8 @@ hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 PM_DIR="$PREFIX/glibc/opt/package-manager"
 mkdir -p "$PM_DIR/installed"
 
-PROJECT_ID="${GITLAB_PROJECT_ID}"
-TOKEN="${GITLAB_TOKEN}"
+PROJECT_ID="76144938"
+TOKEN="glpat-nybXy782yrn2GFJQrwU8iW86MQp1Oml2NnI3Cw.01.1216l75cr"
 
 echo -e "\n${C_CYAN}[SYSTEM] CONNECTING TO GITLAB INFRASTRUCTURE...${NC}"
 
