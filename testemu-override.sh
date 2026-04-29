@@ -25,18 +25,10 @@ WINE_CHOICE=$(dialog --clear \
 3>&1 1>&2 2>&3)
 
 case $WINE_CHOICE in
-    1)
-        W_URL="https://github.com"
-        ;;
-    2)
-        W_URL="https://github.com"
-        ;;
-    3)
-        W_URL="https://winehq.org"
-        ;;
-    4)
-        W_URL=""
-        ;;
+    1) W_URL="https://github.com" ;;
+    2) W_URL="https://github.com" ;;
+    3) W_URL="https://winehq.org" ;;
+    4) W_URL="" ;;
 esac
 
 if [ -n "$W_URL" ]; then
@@ -125,29 +117,29 @@ done
 DXVK_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/d3d is not installed"
 TURNIP_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/mesa is not installed"
 
-mkdir -p "$DXVK_LNK_DIR"
-mkdir -p "$TURNIP_LNK_DIR"
+mkdir -p "$DXVK_LNK_DIR" "$TURNIP_LNK_DIR"
 
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/dxvk.tar "https://github.com"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/turnip.tar "https://github.com"
-
 tar -xf /tmp/dxvk.tar -C "$DXVK_LNK_DIR"
 tar -xf /tmp/turnip.tar -C "$TURNIP_LNK_DIR"
 
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/core.tar "https://github.com"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/conf.tar "https://github.com"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/drivers.tar "https://github.com"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/booster.7z "https://github.com"
 
-mkdir -p $PREFIX/glibc/opt/core $PREFIX/glibc/opt/conf $PREFIX/glibc/opt/drivers
+mkdir -p $PREFIX/glibc/opt/core $PREFIX/glibc/opt/conf $PREFIX/glibc/opt/drivers $PREFIX/glibc/opt/bat-files
 
 tar -xf /tmp/core.tar -C $PREFIX/glibc/opt/core
 tar -xf /tmp/conf.tar -C $PREFIX/glibc/opt/conf
 tar -xf /tmp/drivers.tar -C $PREFIX/glibc/opt/drivers
+7z x /tmp/booster.7z -o$PREFIX/glibc/opt/bat-files -y > /dev/null
 
-rm -f /tmp/dxvk.tar /tmp/turnip.tar /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar
+rm -f /tmp/dxvk.tar /tmp/turnip.tar /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar /tmp/booster.7z
 
 chmod +x "$PREFIX/glibc/opt/scripts/testemu64"
 chmod +x "$PREFIX/glibc/opt/scripts/testemu-optimizer.sh"
 ln -sf $PREFIX/glibc/opt/scripts/testemu64 $PREFIX/bin/testemu64
 
-echo -e "\n${C_NEON}${C_BOLD}>>> DEPLOYMENT SUCCESSFUL <<<${NC}\n"
+echo -e "\n${C_NEON}${C_BOLD}>>> To start type - testemu64. <<<${NC}\n"
