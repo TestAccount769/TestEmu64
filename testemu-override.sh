@@ -26,13 +26,13 @@ WINE_CHOICE=$(dialog --clear \
 
 case $WINE_CHOICE in
     1)
-        W_URL="https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-25/wine-lutris-GE-Proton8-25-x86_64.tar.xz"
+        W_URL="https://github.com"
         ;;
     2)
-        W_URL="https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-25/wine-lutris-GE-Proton8-25-x86_64.tar.xz"
+        W_URL="https://github.com"
         ;;
     3)
-        W_URL="https://dl.winehq.org/wine-builds/linux/x86_64/wine-stable.tar.xz"
+        W_URL="https://winehq.org"
         ;;
     4)
         W_URL=""
@@ -59,11 +59,11 @@ deploy_turnip() {
     cp "${name}.7z" "$M_DIR/" && cd .. && rm -rf t_tmp t.zip
 }
 
-deploy_turnip "https://github.com/K11MCH1/turnip/releases/download/ci/turnip-ci.zip" "turnip-steven-ci"
-deploy_turnip "https://github.com/K11MCH1/turnip/releases/download/v26.2.0-r2/turnip-v26.2.0-r2.zip" "turnip-v26.2.0-r2"
-deploy_turnip "https://github.com/K11MCH1/turnip/releases/download/kimchi-r7/turnip-kimchi-r7.zip" "turnip-kimchi-r7"
-deploy_turnip "https://github.com/K11MCH1/turnip/releases/download/weab-chan/turnip-weab-chan.zip" "turnip-weab-chan"
-deploy_turnip "https://github.com/K11MCH1/turnip/releases/download/hooke/turnip-hooke-speed.zip" "turnip-hooke-speed"
+deploy_turnip "https://github.com" "turnip-steven-ci"
+deploy_turnip "https://github.com" "turnip-v26.2.0-r2"
+deploy_turnip "https://github.com" "turnip-kimchi-r7"
+deploy_turnip "https://github.com" "turnip-weab-chan"
+deploy_turnip "https://github.com" "turnip-hooke-speed"
 
 D_DIR="$PREFIX/glibc/opt/libs/d3d"
 mkdir -p "$D_DIR"
@@ -78,11 +78,11 @@ deploy_dxvk() {
     cp "${name}.7z" "$D_DIR/" && cd .. && rm -rf d_tmp d.tar.gz "$folder"
 }
 
-deploy_dxvk "https://github.com/doitsujin/dxvk/releases/download/v2.7.1/dxvk-2.7.1.tar.gz" "dxvk-gplall" "dxvk-2.7.1"
-deploy_dxvk "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton8-25/dxvk-2.7.tar.gz" "dxvk-gproton" "dxvk-2.7"
-deploy_dxvk "https://github.com/doitsujin/dxvk/releases/download/v2.7.1/dxvk-2.7.1.tar.gz" "dxvk-native" "dxvk-2.7.1"
-deploy_dxvk "https://github.com/Sporif/dxvk-async/releases/download/2.0/dxvk-async-2.0.tar.gz" "dxvk-async" "dxvk-async-2.0"
-deploy_dxvk "https://github.com/AlpyneDreams/d8vk/releases/download/v1.0/d8vk-v1.0.tar.gz" "d8vk" "d8vk-v1.0"
+deploy_dxvk "https://github.com" "dxvk-gplall" "dxvk-2.7.1"
+deploy_dxvk "https://github.com" "dxvk-gproton" "dxvk-2.7"
+deploy_dxvk "https://github.com" "dxvk-native" "dxvk-2.7.1"
+deploy_dxvk "https://github.com" "dxvk-async" "dxvk-async-2.0"
+deploy_dxvk "https://github.com" "d8vk" "d8vk-v1.0"
 
 D3D_PATH="$PREFIX/glibc/opt/prefix/d3d"
 mkdir -p "$D3D_PATH"
@@ -128,22 +128,26 @@ TURNIP_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/mesa is not installed"
 mkdir -p "$DXVK_LNK_DIR"
 mkdir -p "$TURNIP_LNK_DIR"
 
-curl -L \
-  -H "Authorization: token $GITHUB_TOKEN" \
-  -o /tmp/dxvk.tar \
-  "https://github.com/TestAccount769/wine-flow/releases/download/emu-start/dxvk-start.tar"
-
-curl -L \
-  -H "Authorization: token $GITHUB_TOKEN" \
-  -o /tmp/turnip.tar \
-  "https://github.com/TestAccount769/wine-flow/releases/download/emu-start/mesa-star.tar"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/dxvk.tar "https://github.com"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/turnip.tar "https://github.com"
 
 tar -xf /tmp/dxvk.tar -C "$DXVK_LNK_DIR"
 tar -xf /tmp/turnip.tar -C "$TURNIP_LNK_DIR"
 
-rm -f /tmp/dxvk.tar /tmp/turnip.tar
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/core.tar "https://github.com"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/conf.tar "https://github.com"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/drivers.tar "https://github.com"
+
+mkdir -p $PREFIX/glibc/opt/core $PREFIX/glibc/opt/conf $PREFIX/glibc/opt/drivers
+
+tar -xf /tmp/core.tar -C $PREFIX/glibc/opt/core
+tar -xf /tmp/conf.tar -C $PREFIX/glibc/opt/conf
+tar -xf /tmp/drivers.tar -C $PREFIX/glibc/opt/drivers
+
+rm -f /tmp/dxvk.tar /tmp/turnip.tar /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar
 
 chmod +x "$PREFIX/glibc/opt/scripts/testemu64"
+chmod +x "$PREFIX/glibc/opt/scripts/testemu-optimizer.sh"
 ln -sf $PREFIX/glibc/opt/scripts/testemu64 $PREFIX/bin/testemu64
 
-echo -e "\n${C_NEON}${C_BOLD}>>> TYPE 'testemu64' TO LAUNCH EMULATOR <<<${NC}\n"
+echo -e "\n${C_NEON}${C_BOLD}>>> DEPLOYMENT SUCCESSFUL <<<${NC}\n"
