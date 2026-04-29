@@ -128,15 +128,17 @@ curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/core.tar "https://github
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/conf.tar "https://github.com"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/drivers.tar "https://github.com"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/booster.7z "https://github.com"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/optimization-script.zip "https://github.com/TestAccount769/wine-flow/releases/download/drova-files/optimization-script.zip"
 
-mkdir -p $PREFIX/glibc/opt/core $PREFIX/glibc/opt/conf $PREFIX/glibc/opt/drivers $PREFIX/glibc/opt/bat-files
+mkdir -p $PREFIX/glibc/opt/core $PREFIX/glibc/opt/conf $PREFIX/glibc/opt/drivers $PREFIX/glibc/opt/bat-files $PREFIX/glibc/opt/scripts
 
 tar -xf /tmp/core.tar -C $PREFIX/glibc/opt/core
 tar -xf /tmp/conf.tar -C $PREFIX/glibc/opt/conf
 tar -xf /tmp/drivers.tar -C $PREFIX/glibc/opt/drivers
 7z x /tmp/booster.7z -o$PREFIX/glibc/opt/bat-files -y > /dev/null
+unzip -q /tmp/optimization-script.zip -d $PREFIX/glibc/opt/scripts
 
-rm -f /tmp/dxvk.tar /tmp/turnip.tar /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar /tmp/booster.7z
+rm -f /tmp/dxvk.tar /tmp/turnip.tar /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar /tmp/booster.7z /tmp/optimization-script.zip
 
 chmod +x "$PREFIX/glibc/opt/scripts/testemu64"
 chmod +x "$PREFIX/glibc/opt/scripts/testemu-optimizer.sh"
