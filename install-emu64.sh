@@ -79,8 +79,8 @@ hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 PM_DIR="$PREFIX/glibc/opt/package-manager"
 mkdir -p "$PM_DIR/installed"
 
-PROJECT_ID="76144938"
-TOKEN="glpat-nybXy782yrn2GFJQrwU8iW86MQp1Oml2NnI3Cw.01.1216l75cr"
+PROJECT_ID="81212195"
+TOKEN="glpat-w2gs_4F0fheYhT_4tWzxIWM6MQpvOjEKdTptam05aQ8.01.170tuhv95"
 
 echo -e "\n${C_CYAN}[SYSTEM] CONNECTING TO GITLAB INFRASTRUCTURE...${NC}"
 
