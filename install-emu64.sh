@@ -1,3 +1,7 @@
+```bash
+#!/bin/bash
+
+```bash
 #!/bin/bash
 
 C_CYAN='\033[0;36m'; C_NEON='\033[1;32m'; C_PURP='\033[0;35m'
@@ -24,7 +28,6 @@ echo -e "${C_PURP}└───────────────────�
 
 if [ "$IS_TERMUX" -eq 1 ]; then
     termux-setup-storage >/dev/null 2>&1
-
     while [ ! -d "$HOME/storage/shared" ]; do
         echo -ne "${C_RED}\r[!] WAITING FOR STORAGE PERMISSION...${NC}"
         sleep 2
@@ -35,15 +38,12 @@ else
 fi
 
 PKG="pkg"
-if [ "$IS_TERMUX" -ne 1 ]; then
-    PKG="apt"
-fi
+[ "$IS_TERMUX" -ne 1 ] && PKG="apt"
 
 install_group() {
     local group_name="$1"
     shift
     echo -e "\n${C_PURP}>> INITIALIZING: $group_name${NC}"
-
     for pkg in "$@"; do
         echo -ne "${C_CYAN}Installing ${C_BOLD}$pkg${NC}... "
         $PKG install -y "$pkg" >/dev/null 2>&1 && echo -e "${C_NEON}DONE${NC}" || echo -e "${C_RED}FAILED${NC}"
@@ -75,45 +75,29 @@ install_group "Extra Utilities" \
 hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 
 [ -d "$PREFIX/glibc" ] && rm -rf "$PREFIX/glibc"
+PM_DIR="$PREFIX/glibc/opt/testemu"
+BIN_DIR="$PREFIX/glibc/bin"
+mkdir -p "$PM_DIR/installed" "$PM_DIR/temp" "$BIN_DIR"
 
-PM_DIR="$PREFIX/glibc/opt/package-manager"
-mkdir -p "$PM_DIR/installed"
+echo -e "\n${C_CYAN}[SYSTEM] DEPLOYING INDEPENDENT PACKAGE MANAGER...${NC}"
 
-PROJECT_ID="81212195"
-TOKEN="glpat-w2gs_4F0fheYhT_4tWzxIWM6MQpvOjEKdTptam05aQ8.01.170tuhv95"
+PM_URL="[https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/packages.sh](https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/packages.sh)"
 
-echo -e "\n${C_CYAN}[SYSTEM] CONNECTING TO GITLAB INFRASTRUCTURE...${NC}"
-
-wget_gitlab() {
-    local path="$1"
-    local out="$2"
-
-    wget -q --header="PRIVATE-TOKEN: $TOKEN" \
-    "https://gitlab.com/api/v4/projects/${PROJECT_ID}/repository/files/$path/raw?ref=main" \
-    -O "$out"
-}
-
-if wget_gitlab "package-manager" "$PM_DIR/package-manager"; then
-    if [ -s "$PM_DIR/package-manager" ]; then
-        chmod +x "$PM_DIR/package-manager"
-        . "$PM_DIR/package-manager"
-        sync-all >/dev/null 2>&1
-        sync-package wine-ge-custom-8-25 >/dev/null 2>&1
-    else
-        echo -e "${C_RED}[!] EMPTY PACKAGE MANAGER.${NC}"
-        exit 1
-    fi
+if curl -L "$PM_URL" -o "$BIN_DIR/packages.sh"; then
+    chmod +x "$BIN_DIR/packages.sh"
+    echo -e "${C_NEON}[+] PACKAGE MANAGER DEPLOYED.${NC}"
+    echo -e "${C_CYAN}[SYSTEM] FETCHING CORE ASSETS (PATCH 1.0)...${NC}"
+    bash "$BIN_DIR/packages.sh" sync-all
 else
-    echo -e "${C_RED}[!] GITLAB CONNECTION FAILED.${NC}"
+    echo -e "${C_RED}[!] FAILED TO DOWNLOAD PACKAGE MANAGER.${NC}"
     exit 1
 fi
 
 echo -e "\n${C_GOLD}========================================================${NC}"
-print_slow "${C_BOLD}${C_PURP}BASE READY. APPLYING OVERRIDE...${NC}"
+print_slow "${C_BOLD}${C_PURP}SYSTEM READY. EXECUTING FINAL OVERRIDE...${NC}"
 echo -e "${C_GOLD}========================================================${NC}"
 
-OVERRIDE_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh"
-
+OVERRIDE_URL="https://raw```.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh"
 curl -L "$OVERRIDE_URL" -o "$HOME/testemu-override.sh"
 
 if [ -s "$HOME/testemu-override.sh" ]; then
@@ -124,3 +108,5 @@ else
 fi
 
 echo -e "\n${C_NEON}${C_BOLD}>>> DEPLOYMENT SUCCESSFUL. <<<${NC}\n"
+
+```
