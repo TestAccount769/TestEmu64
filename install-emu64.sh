@@ -1,7 +1,4 @@
-```bash
-#!/bin/bash
 
-```bash
 #!/bin/bash
 
 C_CYAN='\033[0;36m'; C_NEON='\033[1;32m'; C_PURP='\033[0;35m'
