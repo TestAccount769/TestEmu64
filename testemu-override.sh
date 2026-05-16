@@ -88,8 +88,8 @@ cd /d Z:\\usr\\glibc\\opt\\prefix\\mesa
 EOF
 done
 
-DXVK_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/d3d is not installed"
-TURNIP_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/mesa is not installed"
+DXVK_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/DXVK"
+TURNIP_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/Turnip"
 
 mkdir -p "$DXVK_LNK_DIR" "$TURNIP_LNK_DIR"
 
