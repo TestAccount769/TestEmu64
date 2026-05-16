@@ -12,33 +12,7 @@ echo -e "${C_PURP}└───────────────────�
 
 if [ -f "$PREFIX/glibc/bin/packages.sh" ]; then
     . "$PREFIX/glibc/bin/packages.sh"
-    sync_package box64-binaries >/dev/null 2>&1
-fi
-
-WINE_CHOICE=$(dialog --clear \
---title "WINE SELECTOR" \
---menu "Choose Wine runtime:" 15 60 4 \
-1 "WoW64 Wine (Proton-style modern)" \
-2 "GE-Proton Wine (recommended gaming)" \
-3 "Vanilla Wine (stable base)" \
-4 "Box86 + Box64 runtime (fallback)" \
-3>&1 1>&2 2>&3)
-
-case $WINE_CHOICE in
-    1) W_URL="https://github.com" ;;
-    2) W_URL="https://github.com" ;;
-    3) W_URL="https://winehq.org" ;;
-    4) W_URL="" ;;
-esac
-
-if [ -n "$W_URL" ]; then
-    wget -q "$W_URL" -O w.tar.xz
-    rm -rf "$PREFIX/glibc/wine-selected"
-    mkdir -p "$PREFIX/glibc/wine-selected"
-    tar -xf w.tar.xz -C "$PREFIX/glibc/wine-selected" --strip-components=1
-    rm w.tar.xz
-else
-    echo -e "${C_NEON}[INFO] Box86/Box64 runtime selected${NC}"
+    sync_package engine >/dev/null 2>&1
 fi
 
 M_DIR="$PREFIX/glibc/opt/libs/mesa"
