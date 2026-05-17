@@ -16,7 +16,7 @@ declare -A packages=(
     [engine]="1.0"
     [graphics]="1.0"
     [dx-bridge]="1.0"
-    [apps]="1.0"
+    [applications]="1.0"
     [manager]="1.0"
 )
 
