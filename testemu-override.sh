@@ -15,15 +15,24 @@ if [ -f "$PREFIX/glibc/bin/packages.sh" ]; then
     sync_package engine >/dev/null 2>&1
 fi
 
-M_DIR="$PREFIX/glibc/opt/libs/mesa"
-mkdir -p "$M_DIR"
+clean_dxvk() {
+    mkdir -p "$PREFIX/glibc/opt/libs/d3d"
+    find "$PREFIX/glibc/opt/libs/d3d" -type f ! -name "dxvk-async-1.10.3.7z" ! -name "dxvk-async-1.10.3.lnk" ! -name "dxvk-async-1.10.3.bat" -delete
+}
+
+clean_turnip() {
+    mkdir -p "$PREFIX/glibc/opt/libs/mesa"
+    find "$PREFIX/glibc/opt/libs/mesa" -type f -delete
+}
 
 deploy_turnip() {
     local url=$1; local name=$2
     wget -q "$url" -O t.zip && unzip -q t.zip -d t_tmp
     cd t_tmp && 7z a -t7z -mx=9 "${name}.7z" * > /dev/null
-    cp "${name}.7z" "$M_DIR/" && cd .. && rm -rf t_tmp t.zip
+    cp "${name}.7z" "$PREFIX/glibc/opt/libs/mesa/" && cd .. && rm -rf t_tmp t.zip
 }
+
+clean_turnip
 
 deploy_turnip "https://github.com" "turnip-steven-ci"
 deploy_turnip "https://github.com" "turnip-v26.2.0-r2"
@@ -33,6 +42,8 @@ deploy_turnip "https://github.com" "turnip-hooke-speed"
 
 D_DIR="$PREFIX/glibc/opt/libs/d3d"
 mkdir -p "$D_DIR"
+
+clean_dxvk
 
 deploy_dxvk() {
     local url=$1; local name=$2; local folder=$3
