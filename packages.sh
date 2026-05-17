@@ -33,62 +33,68 @@ sync_package() {
 
         echo "Updating: $pkg..."
 
-        local filename
-        local tar_args
+        mkdir -p "$TEMP_DIR"
+
+        local archive
+        local workdir="$TEMP_DIR/$pkg"
 
         if [ "$pkg" = "manager" ]; then
-            filename="${pkg}.tar"
-            tar_args="-xf"
+            archive="${pkg}.tar"
         else
-            filename="${pkg}.tar.xz"
-            tar_args="-xJf"
+            archive="${pkg}.tar.xz"
         fi
 
-        if curl -L --fail "$SERVER_URL/$filename" -o "$TEMP_DIR/$filename"; then
+        rm -rf "$workdir"
+        mkdir -p "$workdir"
 
-            if tar -tf "$TEMP_DIR/$filename" | grep -qE '^(/|\.{2}/)'; then
+        if curl -L --fail "$SERVER_URL/$archive" -o "$TEMP_DIR/$archive"; then
+
+            if [ "$pkg" = "manager" ]; then
+                tar -xf "$TEMP_DIR/$archive" -C "$workdir"
+            else
+                tar -xJf "$TEMP_DIR/$archive" -C "$workdir"
+            fi
+
+            if find "$workdir" -type f | grep -qE '\.\./|^/'; then
                 echo "Unsafe archive detected!"
-                rm -f "$TEMP_DIR/$filename"
+                rm -rf "$workdir"
+                rm -f "$TEMP_DIR/$archive"
                 return 1
             fi
 
-            if [ -f "$INSTALLED_DIR/${pkg}.list" ]; then
+            remove_list="$INSTALLED_DIR/${pkg}.list"
 
+            if [ -f "$remove_list" ]; then
                 while read -r file; do
-
                     case "$file" in
                         ../*|/*)
-                            echo "Skipping unsafe path: $file"
                             ;;
                         *)
                             rm -rf "$PREFIX/$file" &>/dev/null
                             ;;
                     esac
-
-                done < "$INSTALLED_DIR/${pkg}.list"
-
+                done < "$remove_list"
             fi
 
-            tar -tf "$TEMP_DIR/$filename" > "$INSTALLED_DIR/${pkg}.list"
+            find "$workdir" -type f | sed "s|^$workdir/||" > "$remove_list"
 
-            if tar $tar_args "$TEMP_DIR/$filename" -C "$PREFIX/"; then
-
-                echo "$target_ver" > "$INSTALLED_DIR/$pkg"
-                echo "$pkg updated to $target_ver"
-
+            if [ -d "$workdir/glibc" ]; then
+                cp -rf "$workdir/glibc"/* "$PREFIX/"
             else
-
-                echo "Extraction failed for $pkg"
-
+                cp -rf "$workdir"/* "$PREFIX/"
             fi
+
+            echo "$target_ver" > "$INSTALLED_DIR/$pkg"
+            echo "$pkg updated to $target_ver"
+
+            rm -rf "$workdir"
+            rm -f "$TEMP_DIR/$archive"
 
         else
 
             echo "Error: Failed to download $pkg"
 
         fi
-
-        rm -f "$TEMP_DIR/$filename"
 
     else
 
