@@ -38,22 +38,28 @@ sync_package() {
         local archive
         local workdir="$TEMP_DIR/$pkg"
 
-        if [ "$pkg" = "manager" ]; then
-            archive="${pkg}.tar"
-        else
-            archive="${pkg}.tar.xz"
-        fi
+        case "$pkg" in
+            dx-bridge|graphics|manager|engine)
+                archive="${pkg}.tar"
+                ;;
+            *)
+                archive="${pkg}.tar.xz"
+                ;;
+        esac
 
         rm -rf "$workdir"
         mkdir -p "$workdir"
 
         if curl -L --fail "$SERVER_URL/$archive" -o "$TEMP_DIR/$archive"; then
 
-            if [ "$pkg" = "manager" ]; then
-                tar -xf "$TEMP_DIR/$archive" -C "$workdir"
-            else
-                tar -xJf "$TEMP_DIR/$archive" -C "$workdir"
-            fi
+            case "$pkg" in
+                dx-bridge|graphics|manager|engine)
+                    tar -xf "$TEMP_DIR/$archive" -C "$workdir"
+                    ;;
+                *)
+                    tar -xJf "$TEMP_DIR/$archive" -C "$workdir"
+                    ;;
+            esac
 
             if find "$workdir" -type f | grep -qE '\.\./|^/'; then
                 echo "Unsafe archive detected!"
