@@ -38,7 +38,7 @@ Built around pure automation scripts and performance-focused configuration witho
 - Mesa Turnip integration
 - Fullscreen & windowed modes
 - Touchscreen and gamepad support
-- Android restriction bypassing
+- Android compability
 - Optimized for Snapdragon devices
 - Lightweight architecture
 - No bloatware
