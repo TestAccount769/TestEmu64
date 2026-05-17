@@ -77,7 +77,7 @@ https://github.com/YuriSizuku/InputBridge/releases
 Open Termux and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/TestEmu64/main/install-emu64.sh -o ~/install-emu64.sh && bash ~/install-emu64.sh
+curl -fsSL https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/install-emu64.sh -o ~/install-emu64.sh && bash ~/install-emu64.sh
 ```
 
 📋 GitHub automatically adds a COPY button to this command.
