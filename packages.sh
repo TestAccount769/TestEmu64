@@ -36,9 +36,6 @@ sync_package() {
         local filename
         local tar_args
 
-        # manager = .tar
-        # everything else = .tar.xz
-
         if [ "$pkg" = "manager" ]; then
             filename="${pkg}.tar"
             tar_args="-xf"
@@ -49,14 +46,12 @@ sync_package() {
 
         if curl -L --fail "$SERVER_URL/$filename" -o "$TEMP_DIR/$filename"; then
 
-            # Security check
             if tar -tf "$TEMP_DIR/$filename" | grep -qE '^(/|\.{2}/)'; then
                 echo "Unsafe archive detected!"
                 rm -f "$TEMP_DIR/$filename"
                 return 1
             fi
 
-            # Remove old files
             if [ -f "$INSTALLED_DIR/${pkg}.list" ]; then
 
                 while read -r file; do
@@ -74,10 +69,8 @@ sync_package() {
 
             fi
 
-            # Save file list
             tar -tf "$TEMP_DIR/$filename" > "$INSTALLED_DIR/${pkg}.list"
 
-            # Extract
             if tar $tar_args "$TEMP_DIR/$filename" -C "$PREFIX/"; then
 
                 echo "$target_ver" > "$INSTALLED_DIR/$pkg"
