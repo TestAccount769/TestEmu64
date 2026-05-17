@@ -145,6 +145,8 @@ https://youtube.com/@TestEmuOfficial
 - DXVK
 - Mesa
 - Turnip
+- VKD3D
+- Prop driver
 - Termux
 - Termux-X11
 - Input Bridge
