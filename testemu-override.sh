@@ -15,107 +15,69 @@ if [ -f "$PREFIX/glibc/bin/packages.sh" ]; then
     sync_package engine >/dev/null 2>&1
 fi
 
-clean_dxvk() {
-    mkdir -p "$PREFIX/glibc/opt/libs/d3d"
-    find "$PREFIX/glibc/opt/libs/d3d" -type f ! -name "dxvk-async-1.10.3.7z" ! -name "dxvk-async-1.10.3.lnk" ! -name "dxvk-async-1.10.3.bat" -delete
-}
+GLIBC_LIB="$PREFIX/glibc/lib"
+DXVK_DIR="$PREFIX/glibc/dxvk"
 
-clean_turnip() {
-    mkdir -p "$PREFIX/glibc/opt/libs/mesa"
-    find "$PREFIX/glibc/opt/libs/mesa" -type f -delete
-}
+mkdir -p "$GLIBC_LIB/turnip_steven_ci"
+mkdir -p "$GLIBC_LIB/turnip_v26_2_0_r2"
+mkdir -p "$GLIBC_LIB/turnip_kimchi_r7"
+mkdir -p "$GLIBC_LIB/turnip_weab_chan"
+mkdir -p "$GLIBC_LIB/turnip_hooke-speed"
+mkdir -p "$GLIBC_LIB/turnip_stock"
+
+mkdir -p "$DXVK_DIR/gplasync_2.7.1/x64" "$DXVK_DIR/gplasync_2.7.1/x32"
+mkdir -p "$DXVK_DIR/gproton_2.7/x64" "$DXVK_DIR/gproton_2.7/x32"
+mkdir -p "$DXVK_DIR/native_2.7.1/x64" "$DXVK_DIR/native_2.7.1/x32"
+mkdir -p "$DXVK_DIR/async_2.0/x64" "$DXVK_DIR/async_2.0/x32"
+mkdir -p "$DXVK_DIR/d8vk_1.0/x64" "$DXVK_DIR/d8vk_1.0/x32"
+
+TMP_DIR="/tmp/emu_deploy"
+mkdir -p "$TMP_DIR"
+cd "$TMP_DIR"
 
 deploy_turnip() {
-    local url=$1; local name=$2
-    wget -q "$url" -O t.zip && unzip -q t.zip -d t_tmp
-    cd t_tmp && 7z a -t7z -mx=9 "${name}.7z" * > /dev/null
-    cp "${name}.7z" "$PREFIX/glibc/opt/libs/mesa/" && cd .. && rm -rf t_tmp t.zip
+    local url=$1; local folder=$2; local internal_so=$3
+    if [[ "$url" == *.zip ]]; then
+        wget -q "$url" -O t.zip && unzip -q t.zip
+    else
+        wget -q "$url" -O t.tar.xz && tar -xf t.tar.xz
+    fi
+    if [ -f "$internal_so" ]; then
+        cp -f "$internal_so" "$GLIBC_LIB/${folder}/libvulkan_freedreno.so"
+    elif [ -f "libvulkan_freedreno.so" ]; then
+        cp -f libvulkan_freedreno.so "$GLIBC_LIB/${folder}/libvulkan_freedreno.so"
+    fi
+    rm -rf *
 }
 
-clean_turnip
-
-deploy_turnip "https://github.com" "turnip-steven-ci"
-deploy_turnip "https://github.com" "turnip-v26.2.0-r2"
-deploy_turnip "https://github.com" "turnip-kimchi-r7"
-deploy_turnip "https://github.com" "turnip-weab-chan"
-deploy_turnip "https://github.com" "turnip-hooke-speed"
-
-D_DIR="$PREFIX/glibc/opt/libs/d3d"
-mkdir -p "$D_DIR"
-
-clean_dxvk
+deploy_turnip "https://github.com" "turnip_steven_ci" "libvulkan_freedreno.so"
+deploy_turnip "https://github.com" "turnip_v26_2_0_r2" "libvulkan_freedreno.so"
+deploy_turnip "https://github.com" "turnip_kimchi_r7" "vulkan.ad07xx.so"
+deploy_turnip "https://github.com" "turnip_weab_chan" "libvulkan_freedreno.so"
+deploy_turnip "https://github.com" "turnip_hooke-speed" "vulkan.ad07xx.so"
+deploy_turnip "https://github.com" "turnip_stock" "libvulkan_freedreno.so"
 
 deploy_dxvk() {
-    local url=$1; local name=$2; local folder=$3
+    local url=$1; local out_folder=$2; local arch_folder=$3
     wget -q "$url" -O d.tar.gz && tar -xf d.tar.gz
-    mkdir -p d_tmp/system32 d_tmp/syswow64
-    cp ${folder}/x64/*.dll d_tmp/system32/
-    cp ${folder}/x86/*.dll d_tmp/syswow64/
-    cd d_tmp && 7z a -t7z -mx=9 "${name}.7z" sys* > /dev/null
-    cp "${name}.7z" "$D_DIR/" && cd .. && rm -rf d_tmp d.tar.gz "$folder"
+    cp -f ${arch_folder}/x64/*.dll "$DXVK_DIR/${out_folder}/x64/"
+    cp -f ${arch_folder}/x86/*.dll "$DXVK_DIR/${out_folder}/x32/"
+    rm -rf *
 }
 
-deploy_dxvk "https://github.com" "dxvk-gplall" "dxvk-2.7.1"
-deploy_dxvk "https://github.com" "dxvk-gproton" "dxvk-2.7"
-deploy_dxvk "https://github.com" "dxvk-native" "dxvk-2.7.1"
-deploy_dxvk "https://github.com" "dxvk-async" "dxvk-async-2.0"
-deploy_dxvk "https://github.com" "d8vk" "d8vk-v1.0"
+deploy_dxvk "https://github.com" "gplasync_2.7.1" "dxvk-2.7.1"
+deploy_dxvk "https://github.com" "gproton_2.7" "dxvk-2.7"
+deploy_dxvk "https://github.com" "native_2.7.1" "dxvk-2.6"
+deploy_dxvk "https://github.com" "async_2.0" "dxvk-2.3"
+deploy_dxvk "https://github.com" "d8vk_1.0" "d8vk"
 
-D3D_PATH="$PREFIX/glibc/opt/prefix/d3d"
-mkdir -p "$D3D_PATH"
-
-dx_vers=("dxvk-gplall" "dxvk-gproton" "dxvk-native" "dxvk-async" "d8vk")
-for name in "${dx_vers[@]}"; do
-cat <<EOF | sed 's/$/\r/' > "$D3D_PATH/${name}.bat"
-@echo off
-set installname=%~n0
-set startname="d3d is not installed"
-call d3d.bat
-set installname=d8vk
-call d3d.bat
-set installname=vkd3d
-set startname=%~n0
-call d3d.bat
-EOF
-done
-
-MESA_PATH="$PREFIX/glibc/opt/prefix/mesa"
-mkdir -p "$MESA_PATH"
-
-tr_vers=("turnip-steven-ci" "turnip-v26.2.0-r2" "turnip-kimchi-r7" "turnip-weab-chan" "turnip-hooke-speed")
-for tname in "${tr_vers[@]}"; do
-cat <<EOF | sed 's/$/\r/' > "$MESA_PATH/${tname}.bat"
-@echo off
-set installname=%~n0
-set startname=%~n0
-echo Installing %installname%...
-title Installing %installname%...
-Z:\\usr\\glibc\\opt\\apps\\7z.exe x Z:\\usr\\glibc\\opt\\libs\\mesa\\%installname%.7z -oZ:\\usr\\glibc -y >NUL 2>&1
-cd /d "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Install" >NUL 2>&1
-for /d %%a in (2.*) do (
-    ren "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Install\\%%a" "2.%startname%" >NUL 2>&1
-)
-cd /d Z:\\usr\\glibc\\opt\\prefix\\mesa
-EOF
-done
-
-DXVK_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/DXVK"
-TURNIP_LNK_DIR="$PREFIX/glibc/opt/prefix/start/Install/Turnip"
-
-mkdir -p "$DXVK_LNK_DIR" "$TURNIP_LNK_DIR"
-
-BASE_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/assets"
-
-curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/dxvk.tar "$BASE_URL/dxvk.tar"
-curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/turnip.tar "$BASE_URL/turnip.tar"
-tar -xf /tmp/dxvk.tar -C "$DXVK_LNK_DIR"
-tar -xf /tmp/turnip.tar -C "$TURNIP_LNK_DIR"
+BASE_URL="https://githubusercontent.com"
 
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/core.tar "$BASE_URL/core.tar"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/conf.tar "$BASE_URL/conf.tar"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/drivers.tar "$BASE_URL/drivers.tar"
 curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/booster.7z "$BASE_URL/booster.7z"
-curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/optimization-script.zip "https://github.com/TestAccount769/wine-flow/releases/download/drova-files/optimization-script.zip"
+curl -L -H "Authorization: token $GITHUB_TOKEN" -o /tmp/optimization-script.zip "https://github.com"
 
 mkdir -p $PREFIX/glibc/opt/core $PREFIX/glibc/opt/conf $PREFIX/glibc/opt/drivers $PREFIX/glibc/opt/bat-files $PREFIX/glibc/opt/scripts
 
@@ -125,7 +87,7 @@ tar -xf /tmp/drivers.tar -C $PREFIX/glibc/opt/drivers
 7z x /tmp/booster.7z -o$PREFIX/glibc/opt/bat-files -y > /dev/null
 unzip -q /tmp/optimization-script.zip -d $PREFIX/glibc/opt/scripts
 
-rm -f /tmp/dxvk.tar /tmp/turnip.tar /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar /tmp/booster.7z /tmp/optimization-script.zip
+rm -rf /tmp/core.tar /tmp/conf.tar /tmp/drivers.tar /tmp/booster.7z /tmp/optimization-script.zip "$TMP_DIR"
 
 chmod +x "$PREFIX/glibc/opt/scripts/testemu64"
 chmod +x "$PREFIX/glibc/opt/scripts/testemu-optimizer.sh"
