@@ -1,4 +1,4 @@
-![logo](TestAccount769/TestEmu64/main/testemu-logo.png)
+![logo](/testemu-logo.png)
 
 # 🚀 TestEmu64
 
