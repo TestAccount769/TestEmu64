@@ -1,4 +1,4 @@
-![logo](./main/testemu-logo.png "logo")
+<img src="main/testemu-logo.png" />
 
 # 🚀 TestEmu64
 
