@@ -1,4 +1,4 @@
-![logo](https://githubusercontent.com)
+![logo](../main/testemu-logo.png "logo")
 
 # 🚀 TestEmu64
 
