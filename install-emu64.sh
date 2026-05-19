@@ -28,10 +28,6 @@ fi
 
 clear
 
-echo -e "${C_PURP}┌────────────────────────────────────────────────────────┐${NC}"
-echo -e "${C_CYAN}${C_BOLD}          TESTEMU64 // SYSTEM DEPLOYMENT PROTOCOL        ${NC}"
-echo -e "${C_PURP}└────────────────────────────────────────────────────────┘${NC}"
-
 if [ "$IS_TERMUX" -eq 1 ]; then
     termux-setup-storage >/dev/null 2>&1
 
@@ -43,7 +39,6 @@ if [ "$IS_TERMUX" -eq 1 ]; then
     echo -e "\n${C_NEON}[+] ACCESS GRANTED.${NC}"
     PKG="pkg"
 else
-    echo -e "${C_NEON}[+] PC MODE DETECTED - SKIPPING STORAGE PERMISSION${NC}"
     PKG="apt"
 fi
 
@@ -51,11 +46,7 @@ install_group() {
     local group_name="$1"
     shift
 
-    echo -e "\n${C_PURP}>> INITIALIZING: $group_name${NC}"
-
     for pkgname in "$@"; do
-        echo -ne "${C_CYAN}Installing ${C_BOLD}$pkgname${NC}... "
-
         if $PKG install -y "$pkgname" >/dev/null 2>&1; then
             echo -e "${C_NEON}DONE${NC}"
         else
@@ -63,8 +54,6 @@ install_group() {
         fi
     done
 }
-
-echo -e "${C_CYAN}[*] SYNCHRONIZING SYSTEM SOURCES...${NC}"
 
 if ! $PKG update -y >/dev/null 2>&1; then
     echo -e "${C_RED}[!] PACKAGE DATABASE UPDATE FAILED.${NC}"
@@ -100,34 +89,22 @@ hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 rm -rf "$PREFIX/glibc"
 
 PM_DIR="$PREFIX/glibc/opt/testemu"
-BIN_DIR="$PREFIX/glibc/bin"
+BIN_DIR="$PREFIX/glibc/glibc/bin"
 
 mkdir -p \
 "$PM_DIR/installed" \
 "$PM_DIR/temp" \
 "$BIN_DIR"
 
-echo -e "\n${C_CYAN}[SYSTEM] DEPLOYING INDEPENDENT PACKAGE MANAGER...${NC}"
-
 PM_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/packages.sh"
 
 if curl -fsSL "$PM_URL" -o "$BIN_DIR/packages.sh"; then
     chmod +x "$BIN_DIR/packages.sh"
-
-    echo -e "${C_NEON}[+] PACKAGE MANAGER DEPLOYED.${NC}"
-    echo -e "${C_CYAN}[SYSTEM] FETCHING CORE ASSETS (PATCH 1.0)...${NC}"
-
     bash "$BIN_DIR/packages.sh" sync-all
 else
     echo -e "${C_RED}[!] FAILED TO DOWNLOAD PACKAGE MANAGER.${NC}"
     exit 1
 fi
-
-echo -e "\n${C_GOLD}========================================================${NC}"
-
-print_slow "${C_BOLD}${C_PURP}SYSTEM READY. EXECUTING FINAL OVERRIDE...${NC}"
-
-echo -e "${C_GOLD}========================================================${NC}"
 
 OVERRIDE_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh"
 
