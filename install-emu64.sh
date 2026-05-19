@@ -74,7 +74,8 @@ fi
 if [ "$IS_TERMUX" -eq 1 ]; then
     install_group "Repositories" \
     x11-repo \
-    root-repo
+    root-repo \
+    glibc-repo
 fi
 
 install_group "Core Tools" \
@@ -89,14 +90,12 @@ install_group "Libraries" \
 openssl ca-certificates libcurl libnghttp2 zlib libpng libjpeg-turbo libtiff \
 libwebp sqlite libffi libxml2 libxslt readline ncurses ncurses-utils
 
-if [ "$IS_TERMUX" -eq 1 ]; then
-    install_group "Multimedia & Graphics" \
-    pulseaudio alsa-lib alsa-utils openal-soft mesa mesa-demos xwayland \
-    xorg-xrandr libx11 libxext libxrender termux-x11
-fi
+install_group "Multimedia & Graphics" \
+pulseaudio alsa-lib alsa-utils openal-soft mesa mesa-demos xwayland \
+xorg-xrandr libx11 libxext libxrender termux-x11-nightly
 
 install_group "Extra Utilities" \
-hashdeep dos2unix inetutils net-tools dialog
+hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 
 rm -rf "$PREFIX/glibc"
 
