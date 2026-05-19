@@ -8,7 +8,7 @@ C_RED='\033[0;31m'
 C_BOLD='\033[1m'
 NC='\033[0m'
 
-export GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+export GITHUB_TOKEN="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"
 
 GLIBC_LIB="$PREFIX/glibc/lib"
 DXVK_DIR="$PREFIX/glibc/dxvk"
