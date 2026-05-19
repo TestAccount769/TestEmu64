@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+
 USER="TestAccount769"
 REPO="TestEmu64"
 TAG="assets"
@@ -23,8 +25,8 @@ declare -A packages=(
 
 sync_package() {
 
-    local pkg=$1
-    local target_ver=${packages[$pkg]}
+    local pkg="$1"
+    local target_ver="${packages[$pkg]}"
     local local_ver=0
 
     [ -f "$INSTALLED_DIR/$pkg" ] && local_ver=$(cat "$INSTALLED_DIR/$pkg")
@@ -52,26 +54,21 @@ sync_package() {
 
         if curl -L --fail "$SERVER_URL/$archive" -o "$TEMP_DIR/$archive"; then
 
-            case "$pkg" in
-                dx-bridge|graphics|manager|engine)
-                    tar -xf "$TEMP_DIR/$archive" -C "$workdir"
-                    ;;
-                *)
+            case "$archive" in
+                *.tar.xz)
                     tar -xJf "$TEMP_DIR/$archive" -C "$workdir"
                     ;;
+                *.tar)
+                    tar -xf "$TEMP_DIR/$archive" -C "$workdir"
+                    ;;
             esac
-
-            if find "$workdir" -type f | grep -qE '\.\./|^/'; then
-                echo "Unsafe archive detected!"
-                rm -rf "$workdir"
-                rm -f "$TEMP_DIR/$archive"
-                return 1
-            fi
 
             remove_list="$INSTALLED_DIR/${pkg}.list"
 
             if [ -f "$remove_list" ]; then
+
                 while read -r file; do
+
                     case "$file" in
                         ../*|/*)
                             ;;
@@ -79,18 +76,29 @@ sync_package() {
                             rm -rf "$PREFIX/$file" &>/dev/null
                             ;;
                     esac
+
                 done < "$remove_list"
+
             fi
 
-            find "$workdir" -type f | sed "s|^$workdir/||" > "$remove_list"
-
             if [ -d "$workdir/glibc" ]; then
-                cp -rf "$workdir/glibc"/* "$PREFIX/"
+
+                find "$workdir/glibc" -type f | \
+                sed "s|^$workdir/glibc/||" > "$remove_list"
+
+                cp -rf "$workdir/glibc"/. "$PREFIX/"
+
             else
-                cp -rf "$workdir"/* "$PREFIX/"
+
+                find "$workdir" -type f | \
+                sed "s|^$workdir/||" > "$remove_list"
+
+                cp -rf "$workdir"/. "$PREFIX/"
+
             fi
 
             echo "$target_ver" > "$INSTALLED_DIR/$pkg"
+
             echo "$pkg updated to $target_ver"
 
             rm -rf "$workdir"
