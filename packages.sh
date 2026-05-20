@@ -37,31 +37,15 @@ sync_package() {
 
         mkdir -p "$TEMP_DIR"
 
-        local archive
+        local archive="${pkg}.tar"
         local workdir="$TEMP_DIR/$pkg"
-
-        case "$pkg" in
-            dx-bridge|graphics|manager|engine)
-                archive="${pkg}.tar"
-                ;;
-            *)
-                archive="${pkg}.tar.xz"
-                ;;
-        esac
 
         rm -rf "$workdir"
         mkdir -p "$workdir"
 
         if curl -L --fail "$SERVER_URL/$archive" -o "$TEMP_DIR/$archive"; then
 
-            case "$archive" in
-                *.tar.xz)
-                    tar -xJf "$TEMP_DIR/$archive" -C "$workdir"
-                    ;;
-                *.tar)
-                    tar -xf "$TEMP_DIR/$archive" -C "$workdir"
-                    ;;
-            esac
+            tar -xf "$TEMP_DIR/$archive" -C "$workdir"
 
             remove_list="$INSTALLED_DIR/${pkg}.list"
 
