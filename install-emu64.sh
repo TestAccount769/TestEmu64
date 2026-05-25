@@ -8,45 +8,19 @@ C_RED='\033[0;31m'
 C_BOLD='\033[1m'
 NC='\033[0m'
 
-print_slow() {
-    local text="$1"
-    for ((i=0; i<${#text}; i++)); do
-        echo -ne "${text:$i:1}"
-        sleep 0.005
-    done
-    echo
+print_status() {
+    echo -e "\n${C_CYAN}${C_BOLD}>>> $1 <<<${NC}\n"
 }
-
-IS_TERMUX=0
-
-if [ -d "/data/data/com.termux/files/usr" ]; then
-    IS_TERMUX=1
-    PREFIX="/data/data/com.termux/files/usr"
-else
-    PREFIX="$HOME/testemu64"
-fi
-
-clear
-
-if [ "$IS_TERMUX" -eq 1 ]; then
-    termux-setup-storage >/dev/null 2>&1
-
-    while [ ! -d "$HOME/storage/shared" ]; do
-        echo -ne "${C_RED}\r[!] WAITING FOR STORAGE PERMISSION...${NC}"
-        sleep 2
-    done
-
-    echo -e "\n${C_NEON}[+] ACCESS GRANTED.${NC}"
-    PKG="pkg"
-else
-    PKG="apt"
-fi
 
 install_group() {
     local group_name="$1"
     shift
 
+    print_status "$group_name"
+
     for pkgname in "$@"; do
+        echo -ne "${C_GOLD}[*] $pkgname... ${NC}"
+
         if $PKG install -y "$pkgname" >/dev/null 2>&1; then
             echo -e "${C_NEON}DONE${NC}"
         else
@@ -55,16 +29,64 @@ install_group() {
     done
 }
 
+download_file() {
+    local url="$1"
+    local output="$2"
+
+    curl -fsSL \
+        --retry 5 \
+        --retry-delay 2 \
+        --connect-timeout 15 \
+        "$url" -o "$output"
+}
+
+IS_TERMUX=0
+
+if [ -d "/data/data/com.termux/files/usr" ]; then
+    IS_TERMUX=1
+    PREFIX="/data/data/com.termux/files/usr"
+    PKG="pkg"
+else
+    PREFIX="$HOME/testemu64"
+    PKG="apt"
+fi
+
+clear
+
+if [ "$IS_TERMUX" -eq 1 ]; then
+    print_status "REQUESTING STORAGE ACCESS"
+
+    termux-setup-storage >/dev/null 2>&1
+
+    while [ ! -d "$HOME/storage/shared" ]; do
+        echo -ne "${C_RED}\r[!] WAITING FOR STORAGE PERMISSION...${NC}"
+        sleep 2
+    done
+
+    echo -e "\n${C_NEON}[+] ACCESS GRANTED.${NC}"
+fi
+
+print_status "UPDATING PACKAGE DATABASE"
+
 if ! $PKG update -y >/dev/null 2>&1; then
     echo -e "${C_RED}[!] PACKAGE DATABASE UPDATE FAILED.${NC}"
     exit 1
 fi
 
+print_status "CHECKING INTERNET"
+
+if ! ping -c 1 github.com >/dev/null 2>&1; then
+    echo -e "${C_RED}[!] NO INTERNET CONNECTION.${NC}"
+    exit 1
+fi
+
 if [ "$IS_TERMUX" -eq 1 ]; then
-    install_group "Repositories" \
-    x11-repo \
-    root-repo \
-    glibc-repo
+    print_status "ENABLING REPOSITORIES"
+
+    if ! pkg install -y x11-repo root-repo glibc-repo >/dev/null 2>&1; then
+        echo -e "${C_RED}[!] FAILED TO ENABLE REPOSITORIES.${NC}"
+        exit 1
+    fi
 fi
 
 install_group "Core Tools" \
@@ -81,12 +103,29 @@ libwebp sqlite libffi libxml2 libxslt readline ncurses ncurses-utils
 
 install_group "Multimedia & Graphics" \
 pulseaudio alsa-lib alsa-utils openal-soft mesa mesa-demos xwayland \
-xorg-xrandr libx11 libxext libxrender termux-x11-nightly
+xorg-xrandr libx11 libxext libxrender
+
+if [ "$IS_TERMUX" -eq 1 ]; then
+    echo -ne "${C_GOLD}[*] termux-x11... ${NC}"
+
+    if pkg install -y termux-x11-nightly >/dev/null 2>&1; then
+        echo -e "${C_NEON}DONE${NC}"
+    elif pkg install -y termux-x11 >/dev/null 2>&1; then
+        echo -e "${C_NEON}DONE${NC}"
+    else
+        echo -e "${C_RED}FAILED${NC}"
+    fi
+fi
 
 install_group "Extra Utilities" \
 hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 
-rm -rf "$PREFIX/glibc"
+print_status "PREPARING ENVIRONMENT"
+
+if [ -d "$PREFIX/glibc" ]; then
+    rm -rf "$PREFIX/glibc.backup"
+    mv "$PREFIX/glibc" "$PREFIX/glibc.backup"
+fi
 
 PM_DIR="$PREFIX/glibc/opt/testemu"
 BIN_DIR="$PREFIX/glibc/glibc/bin"
@@ -97,29 +136,64 @@ mkdir -p \
 "$BIN_DIR"
 
 PM_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/packages.sh"
+OVERRIDE_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh"
 
-if curl -fsSL "$PM_URL" -o "$BIN_DIR/packages.sh"; then
-    chmod +x "$BIN_DIR/packages.sh"
-    bash "$BIN_DIR/packages.sh" sync-all
-else
+print_status "DOWNLOADING PACKAGE MANAGER"
+
+if ! download_file "$PM_URL" "$BIN_DIR/packages.sh"; then
     echo -e "${C_RED}[!] FAILED TO DOWNLOAD PACKAGE MANAGER.${NC}"
+
+    if [ -d "$PREFIX/glibc.backup" ]; then
+        mv "$PREFIX/glibc.backup" "$PREFIX/glibc"
+    fi
+
     exit 1
 fi
 
-OVERRIDE_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh"
+chmod +x "$BIN_DIR/packages.sh"
 
-if curl -fsSL "$OVERRIDE_URL" -o "$HOME/testemu-override.sh"; then
-    chmod +x "$HOME/testemu-override.sh"
+print_status "SYNCING PACKAGES"
 
-    if [ -s "$HOME/testemu-override.sh" ]; then
-        bash "$HOME/testemu-override.sh"
+if bash "$BIN_DIR/packages.sh" sync-all; then
+    print_status "DOWNLOADING OVERRIDE"
+
+    if download_file "$OVERRIDE_URL" "$HOME/testemu-override.sh"; then
+        chmod +x "$HOME/testemu-override.sh"
+
+        if [ -s "$HOME/testemu-override.sh" ]; then
+            print_status "APPLYING OVERRIDE"
+
+            if ! bash "$HOME/testemu-override.sh"; then
+                echo -e "${C_RED}[!] OVERRIDE FAILED.${NC}"
+
+                rm -rf "$PREFIX/glibc"
+
+                if [ -d "$PREFIX/glibc.backup" ]; then
+                    mv "$PREFIX/glibc.backup" "$PREFIX/glibc"
+                fi
+
+                exit 1
+            fi
+        else
+            echo -e "${C_RED}[!] OVERRIDE SCRIPT EMPTY.${NC}"
+            exit 1
+        fi
     else
-        echo -e "${C_RED}[!] OVERRIDE SCRIPT EMPTY.${NC}"
+        echo -e "${C_RED}[!] OVERRIDE SCRIPT NOT FOUND.${NC}"
         exit 1
     fi
 else
-    echo -e "${C_RED}[!] OVERRIDE SCRIPT NOT FOUND.${NC}"
+    echo -e "${C_RED}[!] PACKAGE SYNC FAILED.${NC}"
+
+    rm -rf "$PREFIX/glibc"
+
+    if [ -d "$PREFIX/glibc.backup" ]; then
+        mv "$PREFIX/glibc.backup" "$PREFIX/glibc"
+    fi
+
     exit 1
 fi
+
+rm -rf "$PREFIX/glibc.backup"
 
 echo -e "\n${C_NEON}${C_BOLD}>>> DEPLOYMENT SUCCESSFUL. <<<${NC}\n"
