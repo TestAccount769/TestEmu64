@@ -136,7 +136,6 @@ mkdir -p \
 "$BIN_DIR"
 
 PM_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/packages.sh"
-OVERRIDE_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh"
 
 print_status "DOWNLOADING PACKAGE MANAGER"
 
@@ -154,35 +153,7 @@ chmod +x "$BIN_DIR/packages.sh"
 
 print_status "SYNCING PACKAGES"
 
-if bash "$BIN_DIR/packages.sh" sync-all; then
-    print_status "DOWNLOADING OVERRIDE"
-
-    if download_file "$OVERRIDE_URL" "$HOME/testemu-override.sh"; then
-        chmod +x "$HOME/testemu-override.sh"
-
-        if [ -s "$HOME/testemu-override.sh" ]; then
-            print_status "APPLYING OVERRIDE"
-
-            if ! bash "$HOME/testemu-override.sh"; then
-                echo -e "${C_RED}[!] OVERRIDE FAILED.${NC}"
-
-                rm -rf "$PREFIX/glibc"
-
-                if [ -d "$PREFIX/glibc.backup" ]; then
-                    mv "$PREFIX/glibc.backup" "$PREFIX/glibc"
-                fi
-
-                exit 1
-            fi
-        else
-            echo -e "${C_RED}[!] OVERRIDE SCRIPT EMPTY.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${C_RED}[!] OVERRIDE SCRIPT NOT FOUND.${NC}"
-        exit 1
-    fi
-else
+if ! bash "$BIN_DIR/packages.sh" sync-all; then
     echo -e "${C_RED}[!] PACKAGE SYNC FAILED.${NC}"
 
     rm -rf "$PREFIX/glibc"
