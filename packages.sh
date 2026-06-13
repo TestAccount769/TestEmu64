@@ -15,113 +15,95 @@ TEMP_DIR="$ROOT_DIR/temp"
 mkdir -p "$INSTALLED_DIR" "$TEMP_DIR"
 
 declare -A packages=(
-    [core]="1.0"
-    [engine]="1.0"
-    [graphics]="1.0"
-    [dx-bridge]="1.0"
-    [applications]="1.0"
-    [manager]="1.0"
+[core]="2.0"
+[engine]="2.0"
+[graphics]="2.0"
+[dx-bridge]="2.0"
+[applications]="2.0"
+[manager]="2.0"
 )
 
+remove_package() {
+if [ -f "$INSTALLED_DIR/${1}.list" ]; then
+while read -r file; do
+rm -rf "$PREFIX/$file" 2>/dev/null
+done < "$INSTALLED_DIR/${1}.list"
+fi
+
+```
+rm -f "$INSTALLED_DIR/$1"
+rm -f "$INSTALLED_DIR/${1}.list"
+```
+
+}
+
 sync_package() {
+local pkg="$1"
+local version="${packages[$pkg]}"
+local local_version=0
 
-    local pkg="$1"
-    local target_ver="${packages[$pkg]}"
-    local local_ver=0
+```
+[ -f "$INSTALLED_DIR/$pkg" ] && local_version=$(cat "$INSTALLED_DIR/$pkg")
 
-    [ -f "$INSTALLED_DIR/$pkg" ] && local_ver=$(cat "$INSTALLED_DIR/$pkg")
+if [ "$version" != "$local_version" ]; then
 
-    if [ "$target_ver" != "$local_ver" ]; then
+    echo "Updating $pkg"
 
-        echo "Updating: $pkg..."
+    rm -rf "$TEMP_DIR/$pkg"
+    mkdir -p "$TEMP_DIR/$pkg"
 
-        mkdir -p "$TEMP_DIR"
+    if curl -L --fail "$SERVER_URL/$pkg.tar" -o "$TEMP_DIR/$pkg.tar"; then
 
-        local archive="${pkg}.tar"
-        local workdir="$TEMP_DIR/$pkg"
+        tar -xf "$TEMP_DIR/$pkg.tar" -C "$TEMP_DIR/$pkg"
 
-        rm -rf "$workdir"
-        mkdir -p "$workdir"
+        remove_package "$pkg"
 
-        if curl -L --fail "$SERVER_URL/$archive" -o "$TEMP_DIR/$archive"; then
+        find "$TEMP_DIR/$pkg" -type f | sed "s|^$TEMP_DIR/$pkg/||" > "$INSTALLED_DIR/${pkg}.list"
 
-            tar -xf "$TEMP_DIR/$archive" -C "$workdir"
+        cp -rf "$TEMP_DIR/$pkg/glibc" "$PREFIX"
 
-            remove_list="$INSTALLED_DIR/${pkg}.list"
+        echo "$version" > "$INSTALLED_DIR/$pkg"
 
-            if [ -f "$remove_list" ]; then
+        rm -f "$TEMP_DIR/$pkg.tar"
+        rm -rf "$TEMP_DIR/$pkg"
 
-                while read -r file; do
-
-                    case "$file" in
-                        ../*|/*)
-                            ;;
-                        *)
-                            rm -rf "$PREFIX/$file" &>/dev/null
-                            ;;
-                    esac
-
-                done < "$remove_list"
-
-            fi
-
-            if [ -d "$workdir/glibc" ]; then
-
-                find "$workdir/glibc" -type f | \
-                sed "s|^$workdir/glibc/||" > "$remove_list"
-
-                cp -rf "$workdir/glibc"/. "$PREFIX/"
-
-            else
-
-                find "$workdir" -type f | \
-                sed "s|^$workdir/||" > "$remove_list"
-
-                cp -rf "$workdir"/. "$PREFIX/"
-
-            fi
-
-            echo "$target_ver" > "$INSTALLED_DIR/$pkg"
-
-            echo "$pkg updated to $target_ver"
-
-            rm -rf "$workdir"
-            rm -f "$TEMP_DIR/$archive"
-
-        else
-
-            echo "Error: Failed to download $pkg"
-
-        fi
+        echo "$pkg updated"
 
     else
 
-        echo "$pkg is up to date"
+        echo "Failed $pkg"
 
     fi
+else
+    echo "$pkg is up to date"
+fi
+```
+
 }
 
-case $1 in
+case "$1" in
 
-    "sync-all")
+sync-all)
 
-        for pkg in "${!packages[@]}"; do
-            sync_package "$pkg"
-        done
+for pkg in "${!packages[@]}"; do
+sync_package "$pkg"
+done
 
-        ;;
+;;
 
-    *)
+*)
 
-        if [[ -n "${packages[$1]}" ]]; then
-            sync_package "$1"
-        else
-            echo "Usage: ./packages.sh [sync-all|package_name]"
-            echo "Available: ${!packages[@]}"
-        fi
+if [[ -n "${packages[$1]}" ]]; then
+sync_package "$1"
+else
+echo "Usage: $0 sync-all|package"
+echo "Packages: ${!packages[@]}"
+fi
 
-        ;;
+;;
 
 esac
 
+echo "Applying overrides..."
 curl -fsSL "https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/testemu-override.sh" | bash
+echo "Done"
