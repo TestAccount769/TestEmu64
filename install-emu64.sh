@@ -53,19 +53,6 @@ fi
 
 clear
 
-if [ "$IS_TERMUX" -eq 1 ]; then
-    print_status "REQUESTING STORAGE ACCESS"
-
-    termux-setup-storage >/dev/null 2>&1
-
-    while [ ! -d "$HOME/storage/shared" ]; do
-        echo -ne "${C_RED}\r[!] WAITING FOR STORAGE PERMISSION...${NC}"
-        sleep 2
-    done
-
-    echo -e "\n${C_NEON}[+] ACCESS GRANTED.${NC}"
-fi
-
 print_status "UPDATING PACKAGE DATABASE"
 
 if ! $PKG update -y >/dev/null 2>&1; then
@@ -91,7 +78,7 @@ fi
 
 install_group "Core Tools" \
 bash which file coreutils findutils grep sed gawk util-linux procps less tree \
-curl wget aria2 git openssh rsync zip unzip p7zip tar gzip bzip2 xz-utils
+curl wget aria2 git openssh rsync zip unzip p7zip tar gzip bzip2 xz-utils pv
 
 install_group "Development Stack" \
 clang make cmake ninja pkg-config binutils lld autoconf automake libtool m4 \
@@ -120,6 +107,19 @@ fi
 install_group "Extra Utilities" \
 hashdeep tsu dos2unix inetutils net-tools dialog termux-am
 
+if [ "$IS_TERMUX" -eq 1 ]; then
+    print_status "REQUESTING STORAGE ACCESS"
+
+    termux-setup-storage >/dev/null 2>&1
+
+    while [ ! -d "$HOME/storage/shared" ]; do
+        echo -ne "${C_RED}\r[!] WAITING FOR STORAGE PERMISSION...${NC}"
+        sleep 2
+    done
+
+    echo -e "\n${C_NEON}[+] ACCESS GRANTED.${NC}"
+fi
+
 print_status "PREPARING ENVIRONMENT"
 
 if [ -d "$PREFIX/glibc" ]; then
@@ -127,44 +127,44 @@ if [ -d "$PREFIX/glibc" ]; then
     mv "$PREFIX/glibc" "$PREFIX/glibc.backup"
 fi
 
-PM_DIR="$PREFIX/glibc/opt/testemu"
-BIN_DIR="$PREFIX/glibc/glibc/bin"
+print_status "DOWNLOADING GLIBC ROOTFS"
 
-mkdir -p \
-"$PM_DIR/installed" \
-"$PM_DIR/temp" \
-"$BIN_DIR"
+ROOTFS_URL="https://github.com/TestAccount769/TestEmu64/releases/download/glibc/glibc-box64.tar"
+ARCHIVE_PATH="$PREFIX/glibc-box64.tar"
 
-PM_URL="https://raw.githubusercontent.com/TestAccount769/TestEmu64/main/packages.sh"
+wget --progress=bar:force:noscroll "$ROOTFS_URL" -O "$ARCHIVE_PATH"
 
-print_status "DOWNLOADING PACKAGE MANAGER"
-
-if ! download_file "$PM_URL" "$BIN_DIR/packages.sh"; then
-    echo -e "${C_RED}[!] FAILED TO DOWNLOAD PACKAGE MANAGER.${NC}"
-
+if [ $? -ne 0 ]; then
+    echo -e "${C_RED}[!] FAILED TO DOWNLOAD ROOTFS ARCHIVE.${NC}"
     if [ -d "$PREFIX/glibc.backup" ]; then
         mv "$PREFIX/glibc.backup" "$PREFIX/glibc"
     fi
-
     exit 1
 fi
 
-chmod +x "$BIN_DIR/packages.sh"
+print_status "UNPACKING GLIBC ROOTFS"
 
-print_status "SYNCING PACKAGES"
+pv "$ARCHIVE_PATH" | tar -xf - -C "$PREFIX/"
 
-if ! bash "$BIN_DIR/packages.sh" sync-all; then
-    echo -e "${C_RED}[!] PACKAGE SYNC FAILED.${NC}"
-
+if [ $? -ne 0 ]; then
+    echo -e "${C_RED}[!] ROOTFS EXTRACTION FAILED.${NC}"
     rm -rf "$PREFIX/glibc"
-
     if [ -d "$PREFIX/glibc.backup" ]; then
         mv "$PREFIX/glibc.backup" "$PREFIX/glibc"
     fi
-
     exit 1
 fi
 
+print_status "CONFIGURING SYSTEM BINARIES"
+
+cp "$PREFIX/glibc/opt/scripts/testemu64" "$PREFIX/bin/" 2>/dev/null || true
+chmod +x "$PREFIX/glibc/opt/scripts/"* 2>/dev/null || true
+chmod 777 "$PREFIX/bin/testemu64" 2>/dev/null || true
+
+ln -sf "$PREFIX/glibc/opt/scripts/testemu64" "$PREFIX/bin/testemu64"
+
+rm -f "$ARCHIVE_PATH"
 rm -rf "$PREFIX/glibc.backup"
 
-echo -e "\n${C_NEON}${C_BOLD}>>> DEPLOYMENT SUCCESSFUL. <<<${NC}\n"
+echo -e "\n${C_NEON}${C_BOLD}>>> DEPLOYMENT SUCCESSFUL. <<<${NC}"
+echo -e "${C_GOLD}To launch the emulator, type:${NC} ${C_CYAN}${C_BOLD}testemu64${NC}\n"
