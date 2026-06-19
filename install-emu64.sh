@@ -129,7 +129,7 @@ fi
 
 print_status "DOWNLOADING GLIBC ROOTFS"
 
-ROOTFS_URL="https://github.com/TestAccount769/TestEmu64/releases/download/glibc/glibc-box64.tar"
+ROOTFS_URL="https://github.com/TestAccount769/TestEmu64/releases/download/glibc/assets/glibc-box64.tar"
 ARCHIVE_PATH="$PREFIX/glibc-box64.tar"
 
 wget --progress=bar:force:noscroll "$ROOTFS_URL" -O "$ARCHIVE_PATH"
